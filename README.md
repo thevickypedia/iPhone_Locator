@@ -13,6 +13,9 @@ Your phone's location tracker using PyiCloudService including reverse geocoding
 * SENDER - sender email address (verified via AWS SES)
 * RECIPIENT - receiver email address (verified via AWS SES)
 * DESIRED_LOCATION - any desired location (street name preferably, eg: Creek Vale Way)
+* ACCESS_KEY - AWS access to authenticate into your AWS account
+* SECRET_KEY - AWS secret key
+* REGION=us-west-2
 
 Note: The code was built from the scratch but it was built with an intention to share knowledge and for educational purpose.<br/>Parts of the code can be easily hard coded but left as env to increase reusability.<br/>The script is extremely customizable so remove/add parts of code where ever unnecessary.
 
