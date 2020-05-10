@@ -8,7 +8,7 @@ Your phone's location tracker using PyiCloudService including reverse geocoding
 2. Run this command in your terminal to install necessary packages<br/>cd pyicloud/lib && pip3 install -r requirements.txt
 
 2. Make sure you add the following env variables
-* user - iPhone user id (registered email address)
+* user - Apple user id (registered email address)
 * pass - iCloud password
 * SENDER - sender email address (verified via AWS SES)
 * RECIPIENT - receiver email address (verified via AWS SES)
