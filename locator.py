@@ -51,9 +51,9 @@ if api.requires_2sa:
 
 
 def locate():
-    # runs locator for 5 times as icloud generally strugges to get the accurate location in the very first attempt
+    # runs locator for 10 times as iCloud generally struggles to get the accurate location during initial attempts
     global current_location
-    for locator in range(5):
+    for locator in range(10):
         # GET YOUR PHONE'S LOCATION
         raw_location = (api.iphone.location())
 
