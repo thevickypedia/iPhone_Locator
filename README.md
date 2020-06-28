@@ -20,3 +20,9 @@ Your phone's location tracker using PyiCloudService including reverse geocoding
 Note: The code was built from the scratch but it was built with an intention to share knowledge and for educational purpose.<br/>Parts of the code can be easily hard coded but left as env to increase reusability.<br/>The script is extremely customizable so remove/add parts of code where ever unnecessary.
 
 Click to learn more about [pyicloud](https://pypi.org/project/pyicloud/) and [geopy](https://pypi.org/project/geopy/)
+
+## License & copyright
+
+&copy; Vignesh Sivanandha Rao, iPhone Locator
+
+Licensed under the [MIT License](LICENSE)
