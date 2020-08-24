@@ -7,18 +7,16 @@
 
 import os
 import ssl
-import sys
 from datetime import datetime
 
 import certifi
-import geopy.geocoders
-from geopy.geocoders import Nominatim
+from geopy.geocoders import Nominatim, options
 from pyicloud import PyiCloudService
 
 from lib.emailer import Emailer
 
 ctx = ssl.create_default_context(cafile=certifi.where())
-geopy.geocoders.options.default_ssl_context = ctx
+options.default_ssl_context = ctx
 
 u = os.getenv('user')
 p = os.getenv('pass')
@@ -28,48 +26,43 @@ dt_string = now.strftime("%B %d, %Y %I:%M %p")
 
 api = PyiCloudService(u, p)
 
-if api.requires_2sa:
-    import click
-
-    print("Two-step authentication required. Your trusted devices are:")
-
-    devices = api.trusted_devices
-    for i, device in enumerate(devices):
-        print(f"{i}, {device.get('deviceName', 'Ping me at ')}{device.get('phoneNumber')}")
-
-    device = click.prompt('Which device would you like to use?', default=0)
-    device = devices[device]
-    if not api.send_verification_code(device):
-        print("Failed to send verification code")
-        sys.exit(1)
-
-    code = click.prompt('Please enter validation code')
-    if not api.validate_verification_code(device, code):
-        print("Failed to verify verification code")
-        sys.exit(1)
+# if api.requires_2sa:
+#     import click
+#
+#     print("Two-step authentication required. Your trusted devices are:")
+#
+#     devices = api.trusted_devices
+#     for i, device in enumerate(devices):
+#         print(f"{i}, {device.get('deviceName', 'Ping me at ')}{device.get('phoneNumber')}")
+#
+#     device = click.prompt('Which device would you like to use?', default=0)
+#     device = devices[device]
+#     if not api.send_verification_code(device):
+#         print("Failed to send verification code")
+#         sys.exit(1)
+#
+#     code = click.prompt('Please enter validation code')
+#     if not api.validate_verification_code(device, code):
+#         print("Failed to verify verification code")
+#         sys.exit(1)
 
 
 def locate():
-    # runs locator for 10 times as iCloud generally struggles to get the accurate location during initial attempts
-    global current_location
-    for locator in range(10):
-        # GET YOUR PHONE'S LOCATION
-        raw_location = (api.iphone.location())
+    # GET YOUR PHONE'S LOCATION
+    raw_location = (api.iphone.location())
+    raw_lat = (raw_location['latitude'])
+    raw_long = (raw_location['longitude'])
 
-        raw_lat = (raw_location['latitude'])
-        raw_long = (raw_location['longitude'])
-
-        geo_locator = Nominatim(scheme='http', user_agent='test/1', timeout=3)
-        locator = geo_locator.reverse(f'{raw_lat}, {raw_long}')
-        current_location = locator.address
+    geo_locator = Nominatim(scheme='http', user_agent='test/1', timeout=3)
+    locator = geo_locator.reverse(f'{raw_lat}, {raw_long}')
+    current_location = locator.address
     return current_location
 
 
 def status():
     # GET YOUR DEVICE's STATUS
     stat = api.iphone.status()
-    battery = stat['batteryLevel'] * 100
-    bat_percent = round(battery, 2)
+    bat_percent = round(stat['batteryLevel'] * 100, 2)
     device_model = stat['deviceDisplayName']
     status_code = stat['deviceStatus']
     phone_name = stat['name']
