@@ -1,5 +1,4 @@
-geopy
-matplotlib
-click
-pyicloud
-certifi
+geopy==2.1.0
+pyicloud==0.10.2
+certifi==2020.12.5
+boto3==1.17.59

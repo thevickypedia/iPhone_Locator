@@ -5,26 +5,24 @@
  *
  **/"""
 
-import os
-import ssl
 from datetime import datetime
+from os import environ
+from ssl import create_default_context
 
-import certifi
+from certifi import where
 from geopy.geocoders import Nominatim, options
 from pyicloud import PyiCloudService
 
 from lib.emailer import Emailer
 
-ctx = ssl.create_default_context(cafile=certifi.where())
+ctx = create_default_context(cafile=where())
 options.default_ssl_context = ctx
-
-u = os.getenv('user')
-p = os.getenv('pass')
 
 now = datetime.now()
 dt_string = now.strftime("%B %d, %Y %I:%M %p")
 
-api = PyiCloudService(u, p)
+api = PyiCloudService(environ.get('user'), environ.get('pass'))
+
 
 # if api.requires_2sa:
 #     import click
@@ -71,9 +69,9 @@ def status():
     return phone_status
 
 
-def send_email(data, context):
+def send_email():
     location = locate()
-    keyword = os.getenv('DESIRED_LOCATION')
+    keyword = environ.get('DESIRED_LOCATION')
     stat = status()
     if keyword in location:
         print(f'Within {keyword}, currently at: {location}\n\nPhone Status\n{stat}')
@@ -82,8 +80,8 @@ def send_email(data, context):
         footer_text = "\n----------------------------------------------------------------" \
                       "----------------------------------------\n" \
                       "Data pulled using PyiCloudService including reverse geocoding"
-        sender = f"Location Monitor <{os.getenv('SENDER')}>"
-        recipient = [os.getenv('RECIPIENT')]
+        sender = f"Location Monitor <{environ.get('SENDER')}>"
+        recipient = [environ.get('RECIPIENT')]
         title = f'Location Alert as of {dt_string}'
         text = f'Outside {keyword}, currently at: {location}\n\nPhone Status\n{stat}\n\n{footer_text}'
         email = Emailer(sender, recipient, title, text)
@@ -91,4 +89,4 @@ def send_email(data, context):
 
 
 if __name__ == '__main__':
-    send_email("data", "context")
+    send_email()

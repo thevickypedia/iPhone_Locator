@@ -1,22 +1,23 @@
 #! /usr/bin/env python3
-import os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from os import environ
 
-import boto3
+from boto3 import Session
 
 
 class Emailer:
     def __init__(self, sender: str, recipients: list, title: str, text: str):
-        boto3_ses_client = boto3.Session(
-            aws_access_key_id=os.getenv('ACCESS_KEY'),
-            aws_secret_access_key=os.getenv('SECRET_KEY'),
-        ).client('ses', region_name=os.getenv('REGION'))
+        boto3_ses_client = Session(
+            aws_access_key_id=environ.get('ACCESS_KEY'),
+            aws_secret_access_key=environ.get('SECRET_KEY'),
+        ).client('ses', region_name=environ.get('REGION'))
 
         response_ = self.send_mail(boto3_ses_client, sender, recipients, title, text)
         print(response_)
 
-    def create_multipart_message(self, sender: str, recipients: list, title: str, text: str) -> MIMEMultipart:
+    @staticmethod
+    def create_multipart_message(sender: str, recipients: list, title: str, text: str) -> MIMEMultipart:
         multipart_content_subtype = 'alternative' if text else 'mixed'
         msg = MIMEMultipart(multipart_content_subtype)
         msg['Subject'] = title
