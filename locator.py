@@ -16,7 +16,7 @@ from config import env, LOGGER
 options.default_ssl_context = ssl.create_default_context(cafile=certifi.where())
 geo_locator = Nominatim(scheme="http", user_agent="test/1", timeout=3)
 
-icloud_api = PyiCloudService(apple_id=env.apple_id, password=env.password)
+icloud_api = PyiCloudService(apple_id=env.apple_id.email, password=env.password)
 
 
 def device_selector(phrase: str) -> AppleDevice:
@@ -104,15 +104,15 @@ def send_email(device_location: Dict[str, str], device_status: str) -> NoReturn:
         device_status: Status of the device.
     """
     LOGGER.info(device_status)
-    if env.location in device_location.values():
+    if env.location.lower() in {k: v.lower() for k, v in device_location.items()}.values():
         LOGGER.info("Within '%s', currently at: %s", env.location, device_location)
     else:
         LOGGER.warning("Outside '%s', currently at: %s", env.location, device_location)
         device_location = '\n'.join(device_location.values())
         text = f"Outside {env.location}, currently at: {device_location}\n\nPhone Status\n{device_status}"
-        email_obj = gc.SendEmail(gmail_user=env.gmail_user, gmail_pass=env.gmail_pass)
+        email_obj = gc.SendEmail(gmail_user=env.gmail_user.email, gmail_pass=env.gmail_pass)
         response = email_obj.send_email(subject=f"Location Alert as of {datetime.now().strftime('%B %d, %Y %I:%M %p')}",
-                                        recipient=env.recipient, body=text,
+                                        recipient=env.recipient.email, body=text,
                                         sender="Location Monitor")
         if response.ok:
             LOGGER.info(response.body)
