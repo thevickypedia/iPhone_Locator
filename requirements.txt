@@ -1,5 +1,5 @@
 geopy==2.3.0
 pyicloud==1.0.0
-certifi==2022.12.7
+certifi==2023.7.22
 python-dotenv==1.0.0
 gmail-connector==0.7.0
