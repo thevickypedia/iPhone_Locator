@@ -1,7 +1,7 @@
 import ssl
 from datetime import datetime
 from difflib import SequenceMatcher
-from typing import Union, Dict, NoReturn
+from typing import Union, Dict
 
 import certifi
 import gmailconnector as gc
@@ -16,7 +16,7 @@ from config import env, LOGGER
 options.default_ssl_context = ssl.create_default_context(cafile=certifi.where())
 geo_locator = Nominatim(scheme="http", user_agent="test/1", timeout=3)
 
-icloud_api = PyiCloudService(apple_id=env.apple_id.email, password=env.password)
+icloud_api = PyiCloudService(apple_id=env.apple_id, password=env.password)
 
 
 def device_selector(phrase: str) -> AppleDevice:
@@ -96,7 +96,7 @@ def status(device: AppleDevice) -> str:
            f"Device Name: {stat.get('name')}"
 
 
-def send_email(device_location: Dict[str, str], device_status: str) -> NoReturn:
+def send_email(device_location: Dict[str, str], device_status: str) -> None:
     """Sends email in case the device is outside the location referred in env vars.
 
     Args:
@@ -104,23 +104,31 @@ def send_email(device_location: Dict[str, str], device_status: str) -> NoReturn:
         device_status: Status of the device.
     """
     LOGGER.info(device_status)
-    if env.location.lower() in {k: v.lower() for k, v in device_location.items()}.values():
+    if env.location and env.location.lower() in {k: v.lower() for k, v in device_location.items()}.values():
         LOGGER.info("Within '%s', currently at: %s", env.location, device_location)
     else:
-        LOGGER.warning("Outside '%s', currently at: %s", env.location, device_location)
+        if env.location:
+            LOGGER.warning("Outside '%s', currently at: %s", env.location, device_location)
+            text = f"Outside {env.location}, "
+        else:
+            if env.gmail_user and env.gmail_pass:
+                text = "No location was explicitly mentioned to monitor, "
+                LOGGER.info("No location was explicitly mentioned to monitor.")
+            else:
+                LOGGER.warning("No explicit location to monitor OR communication credentials to send email.")
+                return
         device_location = '\n'.join(device_location.values())
-        text = f"Outside {env.location}, currently at: {device_location}\n\nPhone Status\n{device_status}"
-        email_obj = gc.SendEmail(gmail_user=env.gmail_user.email, gmail_pass=env.gmail_pass)
+        text += f"currently at: {device_location}\n\nDevice Status\n{device_status}"
+        email_obj = gc.SendEmail(gmail_user=env.gmail_user, gmail_pass=env.gmail_pass)
         response = email_obj.send_email(subject=f"Location Alert as of {datetime.now().strftime('%B %d, %Y %I:%M %p')}",
-                                        recipient=env.recipient.email, body=text,
-                                        sender="Location Monitor")
+                                        recipient=env.recipient or env.gmail_user, body=text, sender="Location Monitor")
         if response.ok:
             LOGGER.info(response.body)
         else:
             LOGGER.error(response.json())
 
 
-def locate(phrase: str = env.device) -> NoReturn:
+def locate(phrase: str = env.device) -> None:
     """Initiate device location search and call appropriate functions.
 
     Args:

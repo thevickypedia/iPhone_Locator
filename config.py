@@ -1,10 +1,11 @@
 import logging
-import os
+import smtplib
+import socket
+from typing import Union
 
-import dotenv
-from gmailconnector.validator.address import EmailAddress
-
-dotenv.load_dotenv(dotenv_path=".env")
+import gmailconnector as gc
+from pydantic import EmailStr
+from pydantic_settings import BaseSettings
 
 LOGGER = logging.getLogger(__name__)
 HANDLER = logging.StreamHandler()
@@ -16,23 +17,40 @@ LOGGER.addHandler(hdlr=HANDLER)
 LOGGER.setLevel(level=logging.DEBUG)
 
 
-class EnvConfig(dict):
+def is_port_open(host: str = "example.com", port: int = 80) -> bool:
+    """Function to detect if a particular port is open.
+
+    Args:
+        host: Hostname to connect to.
+        port: Port number to connect on.
+
+    Returns:
+        bool:
+        Returns a True flag is port is open.
+    """
+    try:
+        sock = socket.create_connection((host, port), timeout=2)
+        sock.close()
+        return True
+    except (ConnectionRefusedError, TimeoutError):
+        return False
+
+
+class EnvConfig(BaseSettings):
     """Wrapper for env variables."""
 
-    apple_id: EmailAddress = os.environ.get("APPLE_ID") or os.environ.get("apple_id")
-    password: str = os.environ.get("PASSWORD") or os.environ.get("password")
-    gmail_user: EmailAddress = os.environ.get("GMAIL_USER") or os.environ.get("gmail_user")
-    gmail_pass: str = os.environ.get("GMAIL_PASS") or os.environ.get("gmail_pass")
-    recipient: EmailAddress = os.environ.get("RECIPIENT") or os.environ.get("recipient")
-    device: str = os.environ.get("DEVICE") or os.environ.get("device")
-    location: str = os.environ.get("LOCATION") or os.environ.get("location") or "EARTH"
+    apple_id: EmailStr
+    password: str
+    gmail_user: Union[str, None] = None
+    gmail_pass: Union[str, None] = None
+    recipient: Union[EmailStr, None] = None
+    device: Union[str, None] = None
+    location: Union[str, None] = None
 
 
 env = EnvConfig()
 
-if not all((env.apple_id, env.password)):
-    raise ValueError("apple_id and password are required")
-
-env.apple_id = EmailAddress(address=env.apple_id.__str__(), logger=LOGGER)
-env.gmail_user = EmailAddress(address=env.gmail_user.__str__(), logger=LOGGER)
-env.recipient = EmailAddress(address=env.recipient.__str__(), logger=LOGGER)
+validated = gc.validate_email(
+    email_address=env.gmail_user.__str__(), smtp_check=is_port_open(port=smtplib.SMTP_PORT)
+)
+assert validated.ok, validated.json()
